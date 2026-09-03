@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mern-app-dev
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/Omiizx2003/mern-devsecops-gitops.git
+    targetRevision: main
+    path: apps/mern-app
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mern-app
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
