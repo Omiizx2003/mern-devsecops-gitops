@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: 357199109816.dkr.ecr.ap-south-1.amazonaws.com/mern-devsecops-dev-backend:v1
+          image: 357199109816.dkr.ecr.ap-south-1.amazonaws.com/mern-devsecops-dev-backend:v2
           ports:
             - containerPort: 3500
           env:
