@@ -1,0 +1,71 @@
+namespace: mern-app
+
+backend:
+  replicaCount: 1
+
+  image:
+    repository: 357199109816.dkr.ecr.ap-south-1.amazonaws.com/mern-devsecops-dev-backend
+    tag: v2
+
+  service:
+    port: 3500
+
+  env:
+    PORT: "3500"
+    MONGO_CONN_STR: "mongodb://mongo:27017/tasks"
+    USE_DB_AUTH: "false"
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+frontend:
+  replicaCount: 1
+
+  image:
+    repository: 357199109816.dkr.ecr.ap-south-1.amazonaws.com/mern-devsecops-dev-frontend
+    tag: v3
+
+  service:
+    port: 80
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
+
+mongo:
+  replicaCount: 1
+
+  image:
+    repository: mongo
+    tag: "4.4"
+
+  service:
+    port: 27017
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+ingress:
+  enabled: true
+
+  className: alb
+
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+    alb.ingress.kubernetes.io/healthcheck-path: /

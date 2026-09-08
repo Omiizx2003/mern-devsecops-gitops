@@ -9,7 +9,7 @@ spec:
   source:
     repoURL: https://github.com/Omiizx2003/mern-devsecops-gitops.git
     targetRevision: main
-    path: apps/mern-app
+    path: helm/mern-app
 
   destination:
     server: https://kubernetes.default.svc
