@@ -5,7 +5,7 @@ backend:
 
   image:
     repository: 357199109816.dkr.ecr.ap-south-1.amazonaws.com/mern-devsecops-dev-backend
-    tag: v2
+    tag: "6"
 
   service:
     port: 3500
@@ -28,7 +28,7 @@ frontend:
 
   image:
     repository: 357199109816.dkr.ecr.ap-south-1.amazonaws.com/mern-devsecops-dev-frontend
-    tag: v3
+    tag: "6"
 
   service:
     port: 80
