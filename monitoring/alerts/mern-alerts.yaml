@@ -1,0 +1,175 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: mern-app-alerts
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  groups:
+
+    - name: mern-pod-alerts
+      rules:
+
+        - alert: HighPodCPU
+          expr: |
+            (
+              sum by (namespace, pod) (
+                rate(container_cpu_usage_seconds_total{
+                  namespace="mern-app",
+                  container!="",
+                  container!="POD"
+                }[5m])
+              )
+              /
+              sum by (namespace, pod) (
+                kube_pod_container_resource_limits{
+                  namespace="mern-app",
+                  resource="cpu"
+                }
+              )
+            ) > 0.80
+          for: 5m
+          labels:
+            severity: warning
+            team: devops
+          annotations:
+            summary: "High CPU usage on MERN pod"
+            description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} has CPU usage above 80% of its CPU limit for more than 5 minutes."
+
+        - alert: MERNPodFailure
+          expr: |
+            kube_pod_status_phase{
+              namespace="mern-app",
+              phase=~"Failed|Unknown"
+            } > 0
+          for: 2m
+          labels:
+            severity: critical
+            team: devops
+          annotations:
+            summary: "MERN pod failure"
+            description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is in Failed or Unknown state."
+
+        - alert: MERNDeploymentReplicasUnavailable
+          expr: |
+            kube_deployment_status_replicas_available{
+              namespace="mern-app"
+            }
+            <
+            kube_deployment_spec_replicas{
+              namespace="mern-app"
+            }
+          for: 5m
+          labels:
+            severity: warning
+            team: devops
+          annotations:
+            summary: "MERN deployment has unavailable replicas"
+            description: "Deployment {{ $labels.deployment }} has fewer available replicas than desired."
+
+        - alert: HPAAtMaximumReplicas
+          expr: |
+            kube_horizontalpodautoscaler_status_current_replicas{
+              namespace="mern-app"
+            }
+            >=
+            kube_horizontalpodautoscaler_spec_max_replicas{
+              namespace="mern-app"
+            }
+          for: 5m
+          labels:
+            severity: warning
+            team: devops
+          annotations:
+            summary: "HPA has reached maximum replicas"
+            description: "HPA {{ $labels.horizontalpodautoscaler }} has reached its maximum replica count."
+
+        - alert: HPAUnableToScale
+          expr: |
+            kube_horizontalpodautoscaler_status_desired_replicas{
+              namespace="mern-app"
+            }
+            >=
+            kube_horizontalpodautoscaler_spec_max_replicas{
+              namespace="mern-app"
+            }
+          for: 10m
+          labels:
+            severity: critical
+            team: devops
+          annotations:
+            summary: "HPA wants more replicas but is at maximum"
+            description: "HPA {{ $labels.horizontalpodautoscaler }} has desired replicas at its configured maximum for more than 10 minutes."
+    - name: mern-health-alerts
+      rules:
+
+        - alert: HighPodMemory
+          expr: |
+            (
+              sum by (namespace, pod) (
+                container_memory_working_set_bytes{
+                  namespace="mern-app",
+                  container!="",
+                  container!="POD"
+                }
+              )
+              /
+              sum by (namespace, pod) (
+                kube_pod_container_resource_limits{
+                  namespace="mern-app",
+                  resource="memory"
+                }
+              )
+            ) > 0.80
+          for: 5m
+          labels:
+            severity: warning
+            team: devops
+          annotations:
+            summary: "High memory usage on MERN pod"
+            description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is using more than 80% of its memory limit for over 5 minutes."
+
+        - alert: MERNPodRestarting
+          expr: |
+            increase(
+              kube_pod_container_status_restarts_total{
+                namespace="mern-app"
+              }[10m]
+            ) > 0
+          for: 2m
+          labels:
+            severity: warning
+            team: devops
+          annotations:
+            summary: "MERN pod is restarting"
+            description: "Container in pod {{ $labels.pod }} has restarted during the last 10 minutes."
+
+        - alert: MERNPodNotReady
+          expr: |
+            kube_pod_status_ready{
+              namespace="mern-app",
+              condition="true"
+            } == 0
+          for: 5m
+          labels:
+            severity: warning
+            team: devops
+          annotations:
+            summary: "MERN pod is not ready"
+            description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} has not been ready for more than 5 minutes."
+
+        - alert: KubernetesNodeNotReady
+          expr: |
+            kube_node_status_condition{
+              condition="Ready",
+              status="true"
+            } == 0
+          for: 5m
+          labels:
+            severity: critical
+            team: devops
+          annotations:
+            summary: "Kubernetes node is not ready"
+            description: "Kubernetes node {{ $labels.node }} has been in a non-ready state for more than 5 minutes."
+
